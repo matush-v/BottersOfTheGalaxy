@@ -11,4 +11,3 @@ TODO
             attack hero
         Else if (areEnemyMinionsNear):
             attack minions
-     3) If enemies in range of tower, attack with Tower
