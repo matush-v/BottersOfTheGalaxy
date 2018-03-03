@@ -11,37 +11,21 @@ curInsult = ""
 
 def play():
     myTeam = int(input())
-    bushAndSpawnPointCount = int(input())  # usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
-    for i in range(bushAndSpawnPointCount):
-        # entityType: BUSH, from wood1 it can also be SPAWN
-        entityType, x, y, radius = input().split()
-        x = int(x)
-        y = int(y)
-        radius = int(radius)
-    itemCount = int(input())  # useful from wood2
-    for i in range(itemCount):
-        # itemName: contains keywords such as BRONZE, SILVER and BLADE, BOOTS connected by "" to help you sort easier
-        # itemCost: BRONZE items have lowest cost, the most expensive items are LEGENDARY
-        # damage: keyword BLADE is present if the most important item stat is damage
-        # moveSpeed: keyword BOOTS is present if the most important item stat is moveSpeed
-        # isPotion: 0 if it's not instantly consumed
-        itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion = input().split()
-        itemCost = int(itemCost)
-        damage = int(damage)
-        health = int(health)
-        maxHealth = int(maxHealth)
-        mana = int(mana)
-        maxMana = int(maxMana)
-        moveSpeed = int(moveSpeed)
-        manaRegeneration = int(manaRegeneration)
-        isPotion = int(isPotion)
+
+    unused()
 
     curTurn = 1
-    # game loop
+
+    # game loops
     while True:
         gold = int(input())
         enemyGold = int(input())
         roundType = int(input())  # a positive value will show the number of heroes that await a command
+
+        if roundType < 0:
+            chooseHero()
+            continue
+
         entityCount = int(input())
         for i in range(entityCount):
             # unitType: UNIT, HERO, TOWER, can also be GROOT from wood1
@@ -81,6 +65,36 @@ def play():
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         printMove("WAIT", curTurn)
         curTurn += 1
+
+def chooseHero():
+    print "DEADPOOL"
+
+def unused():
+    bushAndSpawnPointCount = int(
+        input())  # usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
+    for i in range(bushAndSpawnPointCount):
+        # entityType: BUSH, from wood1 it can also be SPAWN
+        entityType, x, y, radius = input().split()
+        x = int(x)
+        y = int(y)
+        radius = int(radius)
+    itemCount = int(input())  # useful from wood2
+    for i in range(itemCount):
+        # itemName: contains keywords such as BRONZE, SILVER and BLADE, BOOTS connected by "" to help you sort easier
+        # itemCost: BRONZE items have lowest cost, the most expensive items are LEGENDARY
+        # damage: keyword BLADE is present if the most important item stat is damage
+        # moveSpeed: keyword BOOTS is present if the most important item stat is moveSpeed
+        # isPotion: 0 if it's not instantly consumed
+        itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion = input().split()
+        itemCost = int(itemCost)
+        damage = int(damage)
+        health = int(health)
+        maxHealth = int(maxHealth)
+        mana = int(mana)
+        maxMana = int(maxMana)
+        moveSpeed = int(moveSpeed)
+        manaRegeneration = int(manaRegeneration)
+        isPotion = int(isPotion)
 
 def printMove(move, turn):
     global curInsult
