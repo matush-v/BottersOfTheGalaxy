@@ -12,6 +12,12 @@ ENTITY_TYPE_MINION = "UNIT"
 ENTITY_TYPE_HERO = "HERO"
 ENTITY_TYPE_TOWER = "TOWER"
 
+ACTION_WAIT = "WAIT"
+ACTION_MOVE = "MOVE"
+ACTION_ATTACK = "ATTACK"
+ACTION_ATTACK_NEAREST = "ATTACK_NEAREST"
+ACTION_MOVE_ATTACK = "MOVE_ATTACK"
+
 ### Globals
 curInsult = ""
 myTeam = None
@@ -37,19 +43,41 @@ def play():
         entityCount = int(raw_input())
         readInEntities(entityCount)
 
-        debug(allEntities)
-        executeTurn()
-
         # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         if roundType > 0:
-            printMove("WAIT", curTurn)
+            executeTurn(curTurn)
             curTurn += 1
 
 
-def executeTurn():
-    ourClosestMinion = findMinionFarthestFromTower(myTeam)
-    debug(ourClosestMinion)
+def executeTurn(curTurn):
+    myFarthestMinion = findMinionFarthestFromTower(myTeam)
+    myHero = getHero(myTeam)
+    if isCloserToTower(myHero, myFarthestMinion, myTeam):
+        # we are safely behind minions, let's attack!
+        printMove(ACTION_ATTACK_NEAREST + " " + ENTITY_TYPE_MINION, curTurn)
+    else:
+        # we need to get behind our farthest minion
+        printMove(ACTION_MOVE + " " + str(myFarthestMinion.posX) + " " + str(myHero.posY), curTurn)
+
+
+
+
+## Returns true if entity 1 is closer to the given team's tower than entity 2 is
+def isCloserToTower(entity1, entity2, team):
+    tower = getTower(team)
+    entity1Distance = abs(getDistanceBetweenEntities(tower, entity1))
+    entity2Distance = abs(getDistanceBetweenEntities(tower, entity2))
+
+    return entity1Distance < entity2Distance
+
+
+
+
+## NOTE this is the X direction ONLY
+## Will return negative value if entity1 is farther left than entity 2 (otherwise positive)
+def getDistanceBetweenEntities(entity1, entity2):
+    return entity1.posX - entity2.posX
 
 
 ## NOTE: this is the X direction ONLY
@@ -65,6 +93,14 @@ def findMinionFarthestFromTower(team):
             maxDist = dist
 
     return farthestMinion
+
+
+def getHero(team):
+    for entity in allEntities:
+        if isinstance(entity, Hero) and entity.team == team:
+            return entity
+
+    raise ValueError("Missing hero for team " + team)
 
 
 def getTower(team):
