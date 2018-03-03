@@ -1,4 +1,5 @@
 import random
+import sys
 
 ### CONSTANTS
 INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn",
@@ -18,7 +19,6 @@ myTeam = None
 def play():
     global myTeam
     myTeam = int(input())
-    global myTeam
 
     unused()
 
@@ -36,6 +36,9 @@ def play():
 
         entityCount = int(input())
         allEntities = readInEntities(entityCount)
+
+        debug(curTurn)
+        debug(allEntities)
 
 
         # Write an action using print
@@ -103,7 +106,7 @@ def chooseHero():
 
 def unused():
     bushAndSpawnPointCount = int(
-        input())  # usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
+        input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
     for i in range(bushAndSpawnPointCount):
         # entityType: BUSH, from wood1 it can also be SPAWN
         entityType, x, y, radius = input().split()
@@ -135,10 +138,11 @@ def printMove(move, turn):
     if turn % 10 == 0:
         curInsult = random.choice(INSULTS)
 
-    print(move + ";" + curInsult)
+    print move + ";" + curInsult
 
 
-
+def debug(debugStr):
+    print >> sys.stderr, debugStr
 
 ########################################################################################################################
 ########################################################################################################################
