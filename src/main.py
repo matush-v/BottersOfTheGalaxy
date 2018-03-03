@@ -1,7 +1,8 @@
 import random
 
 ### CONSTANTS
-INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn"]
+INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn",
+           "dis some bullshit"]
 FINAL_INSULT = "2 ez. gg. no re"
 
 HERO_DEADPOOL = "DEADPOOL"
@@ -17,37 +18,22 @@ myTeam = None
 def play():
     global myTeam
     myTeam = int(input())
-    bushAndSpawnPointCount = int(input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
-    for i in range(bushAndSpawnPointCount):
-        # entityType: BUSH, from wood1 it can also be SPAWN
-        entityType, x, y, radius = input().split()
-        x = int(x)
-        y = int(y)
-        radius = int(radius)
-    itemCount = int(input())  # useful from wood2
-    for i in range(itemCount):
-        # itemName: contains keywords such as BRONZE, SILVER and BLADE, BOOTS connected by "" to help you sort easier
-        # itemCost: BRONZE items have lowest cost, the most expensive items are LEGENDARY
-        # damage: keyword BLADE is present if the most important item stat is damage
-        # moveSpeed: keyword BOOTS is present if the most important item stat is moveSpeed
-        # isPotion: 0 if it's not instantly consumed
-        itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion = input().split()
-        itemCost = int(itemCost)
-        damage = int(damage)
-        health = int(health)
-        maxHealth = int(maxHealth)
-        mana = int(mana)
-        maxMana = int(maxMana)
-        moveSpeed = int(moveSpeed)
-        manaRegeneration = int(manaRegeneration)
-        isPotion = int(isPotion)
+    global myTeam
+
+    unused()
 
     curTurn = 1
-    # game loop
+
+    # game loops
     while True:
         gold = int(input())
         enemyGold = int(input())
         roundType = int(input())  # a positive value will show the number of heroes that await a command
+
+        if roundType < 0:
+            chooseHero()
+            continue
+
         entityCount = int(input())
         allEntities = readInEntities(entityCount)
 
@@ -111,6 +97,36 @@ def readInEntities(entityCount):
 
     return allEntities
 
+
+def chooseHero():
+    print HERO_DEADPOOL
+
+def unused():
+    bushAndSpawnPointCount = int(
+        input())  # usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
+    for i in range(bushAndSpawnPointCount):
+        # entityType: BUSH, from wood1 it can also be SPAWN
+        entityType, x, y, radius = input().split()
+        x = int(x)
+        y = int(y)
+        radius = int(radius)
+    itemCount = int(input())  # useful from wood2
+    for i in range(itemCount):
+        # itemName: contains keywords such as BRONZE, SILVER and BLADE, BOOTS connected by "" to help you sort easier
+        # itemCost: BRONZE items have lowest cost, the most expensive items are LEGENDARY
+        # damage: keyword BLADE is present if the most important item stat is damage
+        # moveSpeed: keyword BOOTS is present if the most important item stat is moveSpeed
+        # isPotion: 0 if it's not instantly consumed
+        itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion = input().split()
+        itemCost = int(itemCost)
+        damage = int(damage)
+        health = int(health)
+        maxHealth = int(maxHealth)
+        mana = int(mana)
+        maxMana = int(maxMana)
+        moveSpeed = int(moveSpeed)
+        manaRegeneration = int(manaRegeneration)
+        isPotion = int(isPotion)
 
 def printMove(move, turn):
     global curInsult
