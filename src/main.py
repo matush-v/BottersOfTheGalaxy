@@ -32,13 +32,9 @@ def play():
 
         if roundType < 0:
             chooseHero()
-            continue
 
         entityCount = int(raw_input())
         allEntities = readInEntities(entityCount)
-
-        debug(curTurn)
-        debug(allEntities)
 
 
         # Write an action using print
@@ -47,8 +43,9 @@ def play():
 
         # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
-        printMove("WAIT", curTurn)
-        curTurn += 1
+        if roundType > 0:
+            printMove("WAIT", curTurn)
+            curTurn += 1
 
 
 def readInEntities(entityCount):
