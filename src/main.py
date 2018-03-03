@@ -8,8 +8,10 @@ FINAL_INSULT = "2 ez. gg. no re"
 
 ### Globals
 curInsult = ""
+myTeam = 0
 
 def play():
+    global myTeam
     myTeam = int(input())
 
     unused()

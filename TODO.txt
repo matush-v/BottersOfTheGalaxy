@@ -1,12 +1,13 @@
 TODO
 
-- write a script to combine multiple python files into one for coding game
-  simulator (we just need make sure global namespace is unique)
-- set up classes for each entity type (with base entity class)
-- read in game input and create the corresponding objects
 - Do some winning strategy
   Potential Strat
      1) Always stick with your minions.
+        a) check if within range of ally minions
+        b) if not move behind ally minions
+     2) Attack nearest "UNIT"
+
+     FUTURE:
      2) Attack plan
         If tower:
             attack tower
