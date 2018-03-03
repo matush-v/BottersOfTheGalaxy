@@ -1,0 +1,7 @@
+TODO
+
+- write a script to combine multiple python files into one for coding game
+  simulator (we just need make sure global namespace is unique)
+- set up classes for each entity type (with base entity class)
+- read in game input and create the corresponding objects
+- Do some winning strategy
