@@ -5,3 +5,12 @@ TODO
 - set up classes for each entity type (with base entity class)
 - read in game input and create the corresponding objects
 - Do some winning strategy
+  Potential Strat
+     1) Always stick with your minions.
+     2) Attack plan
+        If tower:
+            attack tower
+        Else if (isEnemyHeroNear && our minions > their minions):
+            attack hero
+        Else if (areEnemyMinionsNear):
+            attack minions
