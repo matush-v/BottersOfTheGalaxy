@@ -3,7 +3,8 @@ import sys
 import math
 
 ### CONSTANTS
-INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn"]
+INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn",
+           "dis some bullshit"]
 FINAL_INSULT = "2 ez. gg. no re"
 
 ### Globals
