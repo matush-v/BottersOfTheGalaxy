@@ -51,18 +51,17 @@ def play():
 
 
 def executeTurn(curTurn):
-    myFarthestMinion = findMinionFarthestFromTower(myTeam)
+    otherTeam = getOtherTeam(myTeam)
+    shieldMinion = findMinionForBodyShield(myTeam)
+    minionToAttack = findMinionFarthestFromTower(getMinions(otherTeam), otherTeam)
     myHero = getHero(myTeam)
-    if isCloserToTower(myHero, myFarthestMinion, myTeam):
-        # we are safely behind minions, let's attack!
-        printMove(ACTION_ATTACK_NEAREST + " " + ENTITY_TYPE_MINION, curTurn)
-    else:
-        # we need to get behind our farthest minion
-        printMove(ACTION_MOVE + " " + str(myFarthestMinion.posX) + " " + str(myHero.posY), curTurn)
+    printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(myHero.posY) + " " + str(minionToAttack.unitId), curTurn)
+
 
 ## Use to decide whether to add or subtract for the X direction
 def getDirectionMultiplier(team):
     return 1 if team == 0 else -1
+
 
 ## Returns true if entity 1 is closer to the given team's tower than entity 2 is
 def isCloserToTower(entity1, entity2, team):
@@ -73,29 +72,46 @@ def isCloserToTower(entity1, entity2, team):
     return entity1Distance < entity2Distance
 
 
-
-
 ## NOTE this is the X direction ONLY
 ## Will return negative value if entity1 is farther left than entity 2 (otherwise positive)
 def getDistanceBetweenEntities(entity1, entity2):
     return entity1.posX - entity2.posX
 
 
-## NOTE: this is the X direction ONLY
-def findMinionFarthestFromTower(team):
+def findMinionForBodyShield(team):
     minions = getMinions(team)
+
+    healthyMinions = [m for m in minions if not isLowHealth(m)]
+
+    ## Look for a healthy minion first because we need a good body shield!
+    bodyShieldMinion = findMinionFarthestFromTower(healthyMinions, team)
+    if bodyShieldMinion is None:
+        ## We don't have any healthy minions! Retreat to minion farthest from OPPOSITE tower
+        bodyShieldMinion = findMinionFarthestFromTower(minions, getOtherTeam(team))
+
+    return bodyShieldMinion
+
+
+## NOTE: this is the X direction ONLY
+def findMinionFarthestFromTower(minions, team):
     tower = getTower(team)
     maxDist = None
     farthestMinion = None
     for m in minions:
         dist = abs(m.posX - tower.posX)
         if maxDist is None or dist > maxDist:
-            if (farthestMinion is None) or (farthestMinion and m.health > farthestMinion.health):
                 farthestMinion = m
                 maxDist = dist
 
     return farthestMinion
 
+
+def isLowHealth(entity):
+    if entity.maxHealth <= 0:
+        return True
+
+    lowHealthPercentage = 25
+    return entity.health / entity.maxHealth < (entity.maxHealth * (lowHealthPercentage / 100))
 
 def getHero(team):
     for entity in allEntities:
@@ -121,6 +137,12 @@ def getMinions(team):
 
     return ourMinions
 
+
+def getOtherTeam(team):
+    if team == 0:
+        return 1
+    else:
+        return 0
 
 def readInEntities(entityCount):
     global allEntities
