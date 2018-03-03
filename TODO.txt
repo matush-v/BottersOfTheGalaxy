@@ -6,7 +6,7 @@ TODO
 - read in game input and create the corresponding objects
 - Do some winning strategy
   Potential Strat
-     1) Always stick with your minions.
+     1) Always stick with your minions
      2) Attack plan
         If tower:
             attack tower

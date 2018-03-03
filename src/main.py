@@ -1,17 +1,23 @@
 import random
-import sys
-import math
 
 ### CONSTANTS
 INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn"]
 FINAL_INSULT = "2 ez. gg. no re"
 
+HERO_DEADPOOL = "DEADPOOL"
+
+ENTITY_TYPE_MINION = "UNIT"
+ENTITY_TYPE_HERO = "HERO"
+ENTITY_TYPE_TOWER = "TOWER"
+
 ### Globals
 curInsult = ""
+myTeam = None
 
 def play():
+    global myTeam
     myTeam = int(input())
-    bushAndSpawnPointCount = int(input())  # usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
+    bushAndSpawnPointCount = int(input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
     for i in range(bushAndSpawnPointCount):
         # entityType: BUSH, from wood1 it can also be SPAWN
         entityType, x, y, radius = input().split()
@@ -43,35 +49,8 @@ def play():
         enemyGold = int(input())
         roundType = int(input())  # a positive value will show the number of heroes that await a command
         entityCount = int(input())
-        for i in range(entityCount):
-            # unitType: UNIT, HERO, TOWER, can also be GROOT from wood1
-            # shield: useful in bronze
-            # stunDuration: useful in bronze
-            # countDown1: all countDown and mana variables are useful starting in bronze
-            # heroType: DEADPOOL, VALKYRIE, DOCTOR_STRANGE, HULK, IRONMAN
-            # isVisible: 0 if it isn't
-            # itemsOwned: useful from wood1
-            unitId, team, unitType, x, y, attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned = input().split()
-            unitId = int(unitId)
-            team = int(team)
-            x = int(x)
-            y = int(y)
-            attackRange = int(attackRange)
-            health = int(health)
-            maxHealth = int(maxHealth)
-            shield = int(shield)
-            attackDamage = int(attackDamage)
-            movementSpeed = int(movementSpeed)
-            stunDuration = int(stunDuration)
-            goldValue = int(goldValue)
-            countDown1 = int(countDown1)
-            countDown2 = int(countDown2)
-            countDown3 = int(countDown3)
-            mana = int(mana)
-            maxMana = int(maxMana)
-            manaRegeneration = int(manaRegeneration)
-            isVisible = int(isVisible)
-            itemsOwned = int(itemsOwned)
+        allEntities = readInEntities(entityCount)
+
 
         # Write an action using print
         # To debug: print("Debug messages...", file=sys.stderr)
@@ -81,6 +60,57 @@ def play():
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         printMove("WAIT", curTurn)
         curTurn += 1
+
+
+def readInEntities(entityCount):
+    allEntities = []
+
+    for i in range(entityCount):
+        # unitType: UNIT, HERO, TOWER, can also be GROOT from wood1
+        # shield: useful in bronze
+        # stunDuration: useful in bronze
+        # countDown1: all countDown and mana variables are useful starting in bronze
+        # heroType: DEADPOOL, VALKYRIE, DOCTOR_STRANGE, HULK, IRONMAN
+        # isVisible: 0 if it isn't
+        # itemsOwned: useful from wood1
+        unitId, team, entityType, x, y, attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned = input().split()
+        unitId = int(unitId)
+        team = int(team)
+        x = int(x)
+        y = int(y)
+        attackRange = int(attackRange)
+        health = int(health)
+        maxHealth = int(maxHealth)
+        shield = int(shield)
+        attackDamage = int(attackDamage)
+        movementSpeed = int(movementSpeed)
+        stunDuration = int(stunDuration)
+        goldValue = int(goldValue)
+        countDown1 = int(countDown1)
+        countDown2 = int(countDown2)
+        countDown3 = int(countDown3)
+        mana = int(mana)
+        maxMana = int(maxMana)
+        manaRegeneration = int(manaRegeneration)
+        isVisible = int(isVisible)
+        itemsOwned = int(itemsOwned)
+
+        entity = None
+        if entityType == ENTITY_TYPE_MINION:
+            entity = Minion(unitId, team, x, y, attackRange, health, maxHealth, attackDamage, movementSpeed)
+        elif entityType == ENTITY_TYPE_HERO:
+            entity = Hero(heroType, unitId, team, x, y, attackRange, health, maxHealth, mana, maxMana,
+                          attackDamage, movementSpeed, manaRegeneration, isVisible, itemsOwned)
+        elif entityType == ENTITY_TYPE_TOWER:
+            entity = Tower(unitId, team, x, y)
+
+        if entity is None:
+            raise ValueError("unknown entity type " + entityType)
+
+        allEntities.append(entity)
+
+    return allEntities
+
 
 def printMove(move, turn):
     global curInsult
@@ -92,12 +122,22 @@ def printMove(move, turn):
     print(move + ";" + curInsult)
 
 
+
+
+########################################################################################################################
+########################################################################################################################
+################################################## Classes #############################################################
+########################################################################################################################
+########################################################################################################################
+
 class Entity(object):
 
-    def __init__(self, unitId, type, team, attackRange, health, maxHealth, mana, maxMana, attackDamage, movementSpeed, posX, posY):
+    def __init__(self, unitId, entityType, team, posX, posY, attackRange, health, maxHealth, mana, maxMana, attackDamage, movementSpeed):
         self.unitId = unitId
-        self.type = type
+        self.entityType = entityType
         self.team = team
+        self.posX = posX
+        self.posY = posY
         self.attackRange = attackRange
         self.health = health
         self.maxHealth = maxHealth
@@ -105,28 +145,30 @@ class Entity(object):
         self.maxMana = maxMana
         self.attackDamage = attackDamage
         self.movementSpeed = movementSpeed
-        self.posX = posX
-        self.posY = posY
+
+class Minion(Entity):
+
+    def __init__(self, unitId, team, posX, posY, attackRange, health, maxHealth, attackDamage, movementSpeed, mana=0, maxMana=0):
+        super(Minion, self).__init__(unitId, ENTITY_TYPE_MINION, team, posX, posY, attackRange, health, maxHealth, mana, maxMana,
+                                     attackDamage, movementSpeed)
 
 class Hero(Entity):
 
-    def __init__(self, name, itemsOwned, heroType, unitId, team, posX, posY):
-        if name == "DEADPOOL":
-            super(Hero, self).__init__(unitId, "HERO", team, 110, 1380, 1380, 100, 100, 80, 200, posX, posY)
-            self.manaRegeneration = 1
-        else:
-            raise ValueError("We only support Deadpool")
+    def __init__(self, heroType, unitId, team, posX, posY, attackRange, health, maxHealth, mana, maxMana, attackDamage, movementSpeed, manaRegeneration, isVisible, itemsOwned):
+        super(Hero, self).__init__(unitId, ENTITY_TYPE_HERO, team, posX, posY, attackRange, health, maxHealth,
+                                   mana, maxMana, attackDamage, movementSpeed)
 
-        self.itemsOwned = itemsOwned
-        self.isVisible = True
         self.heroType = heroType
+        self.manaRegeneration = manaRegeneration
+        self.isVisible = isVisible
+        self.itemsOwned = itemsOwned
 
 
 class Tower(Entity):
 
     def __init__(self, unitId, team, posX, posY):
-        super(Tower, self).__init__(unitId, type="TOWER", team=team, attackRange=400, health=3000, maxHealth=3000,
-                                    mana=0, maxMana=0, attackDamage=100, movementSpeed=0, posX=posX, posY=posY)
+        super(Tower, self).__init__(unitId, ENTITY_TYPE_TOWER, team, posX, posY, attackRange=400, health=3000, maxHealth=3000,
+                                    mana=0, maxMana=0, attackDamage=100, movementSpeed=0)
 
 
 play()
