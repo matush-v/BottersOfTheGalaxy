@@ -91,4 +91,42 @@ def printMove(move, turn):
 
     print(move + ";" + curInsult)
 
+
+class Entity(object):
+
+    def __init__(self, unitId, type, team, attackRange, health, maxHealth, mana, maxMana, attackDamage, movementSpeed, posX, posY):
+        self.unitId = unitId
+        self.type = type
+        self.team = team
+        self.attackRange = attackRange
+        self.health = health
+        self.maxHealth = maxHealth
+        self.mana = mana
+        self.maxMana = maxMana
+        self.attackDamage = attackDamage
+        self.movementSpeed = movementSpeed
+        self.posX = posX
+        self.posY = posY
+
+class Hero(Entity):
+
+    def __init__(self, name, itemsOwned, heroType, unitId, team, posX, posY):
+        if name == "DEADPOOL":
+            super(Hero, self).__init__(unitId, "HERO", team, 110, 1380, 1380, 100, 100, 80, 200, posX, posY)
+            self.manaRegeneration = 1
+        else:
+            raise ValueError("We only support Deadpool")
+
+        self.itemsOwned = itemsOwned
+        self.isVisible = True
+        self.heroType = heroType
+
+
+class Tower(Entity):
+
+    def __init__(self, unitId, team, posX, posY):
+        super(Tower, self).__init__(unitId, type="TOWER", team=team, attackRange=400, health=3000, maxHealth=3000,
+                                    mana=0, maxMana=0, attackDamage=100, movementSpeed=0, posX=posX, posY=posY)
+
+
 play()
