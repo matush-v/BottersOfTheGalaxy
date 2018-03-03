@@ -17,8 +17,7 @@ myTeam = None
 
 def play():
     global myTeam
-    myTeam = int(input())
-    global myTeam
+    myTeam = int(raw_input())
 
     unused()
 
@@ -26,15 +25,15 @@ def play():
 
     # game loops
     while True:
-        gold = int(input())
-        enemyGold = int(input())
-        roundType = int(input())  # a positive value will show the number of heroes that await a command
+        gold = int(raw_input())
+        enemyGold = int(raw_input())
+        roundType = int(raw_input())  # a positive value will show the number of heroes that await a command
 
         if roundType < 0:
             chooseHero()
             continue
 
-        entityCount = int(input())
+        entityCount = int(raw_input())
         allEntities = readInEntities(entityCount)
 
 
@@ -59,7 +58,7 @@ def readInEntities(entityCount):
         # heroType: DEADPOOL, VALKYRIE, DOCTOR_STRANGE, HULK, IRONMAN
         # isVisible: 0 if it isn't
         # itemsOwned: useful from wood1
-        unitId, team, entityType, x, y, attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned = input().split()
+        unitId, team, entityType, x, y, attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned = raw_input().split()
         unitId = int(unitId)
         team = int(team)
         x = int(x)
@@ -103,21 +102,21 @@ def chooseHero():
 
 def unused():
     bushAndSpawnPointCount = int(
-        input())  # usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
+        raw_input())  # usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
     for i in range(bushAndSpawnPointCount):
         # entityType: BUSH, from wood1 it can also be SPAWN
-        entityType, x, y, radius = input().split()
+        entityType, x, y, radius = raw_input().split()
         x = int(x)
         y = int(y)
         radius = int(radius)
-    itemCount = int(input())  # useful from wood2
+    itemCount = int(raw_input())  # useful from wood2
     for i in range(itemCount):
         # itemName: contains keywords such as BRONZE, SILVER and BLADE, BOOTS connected by "" to help you sort easier
         # itemCost: BRONZE items have lowest cost, the most expensive items are LEGENDARY
         # damage: keyword BLADE is present if the most important item stat is damage
         # moveSpeed: keyword BOOTS is present if the most important item stat is moveSpeed
         # isPotion: 0 if it's not instantly consumed
-        itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion = input().split()
+        itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion = raw_input().split()
         itemCost = int(itemCost)
         damage = int(damage)
         health = int(health)
@@ -135,7 +134,7 @@ def printMove(move, turn):
     if turn % 10 == 0:
         curInsult = random.choice(INSULTS)
 
-    print(move + ";" + curInsult)
+    print move + ";" + curInsult
 
 
 
