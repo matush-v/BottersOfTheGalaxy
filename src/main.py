@@ -90,8 +90,9 @@ def findMinionFarthestFromTower(team):
     for m in minions:
         dist = abs(m.posX - tower.posX)
         if maxDist is None or dist > maxDist:
-            farthestMinion = m
-            maxDist = dist
+            if (farthestMinion is None) or (farthestMinion and m.health > farthestMinion.health):
+                farthestMinion = m
+                maxDist = dist
 
     return farthestMinion
 
