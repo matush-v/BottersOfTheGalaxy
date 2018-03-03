@@ -2,12 +2,8 @@ TODO
 
 - Do some winning strategy
   Potential Strat
-     1) Always stick with your minions.
-        a) check if within range of ally minions
-        b) if not move behind ally minions
-     2) Attack nearest "UNIT"
-
-     FUTURE:
+     UPDATES:
+     1) Retreat if farthest minion (body shield) has low health
      2) Attack plan
         If tower:
             attack tower

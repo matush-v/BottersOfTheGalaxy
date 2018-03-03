@@ -60,8 +60,9 @@ def executeTurn(curTurn):
         # we need to get behind our farthest minion
         printMove(ACTION_MOVE + " " + str(myFarthestMinion.posX) + " " + str(myHero.posY), curTurn)
 
-
-
+## Use to decide whether to add or subtract for the X direction
+def getDirectionMultiplier(team):
+    return 1 if team == 0 else -1
 
 ## Returns true if entity 1 is closer to the given team's tower than entity 2 is
 def isCloserToTower(entity1, entity2, team):
