@@ -3,7 +3,7 @@ import sys
 
 ### CONSTANTS
 INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn",
-           "dis some bullshit"]
+           "dis some disrespect"]
 FINAL_INSULT = "2 ez. gg. no re"
 
 HERO_DEADPOOL = "DEADPOOL"
@@ -15,9 +15,10 @@ ENTITY_TYPE_TOWER = "TOWER"
 ### Globals
 curInsult = ""
 myTeam = None
+allEntities = []
 
 def play():
-    global myTeam
+    global myTeam, allEntities
     myTeam = int(raw_input())
 
     unused()
@@ -34,12 +35,10 @@ def play():
             chooseHero()
 
         entityCount = int(raw_input())
-        allEntities = readInEntities(entityCount)
+        readInEntities(entityCount)
 
-
-        # Write an action using print
-        # To debug: print("Debug messages...", file=sys.stderr)
-
+        debug(allEntities)
+        executeTurn()
 
         # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
@@ -48,7 +47,45 @@ def play():
             curTurn += 1
 
 
+def executeTurn():
+    ourClosestMinion = findMinionFarthestFromTower(myTeam)
+    debug(ourClosestMinion)
+
+
+## NOTE: this is the X direction ONLY
+def findMinionFarthestFromTower(team):
+    minions = getMinions(team)
+    tower = getTower(team)
+    maxDist = None
+    farthestMinion = None
+    for m in minions:
+        dist = abs(m.posX - tower.posX)
+        if maxDist is None or dist > maxDist:
+            farthestMinion = m
+            maxDist = dist
+
+    return farthestMinion
+
+
+def getTower(team):
+    for entity in allEntities:
+        if isinstance(entity, Tower) and entity.team == team:
+            return entity
+
+    raise ValueError("Missing tower for team " + team)
+
+
+def getMinions(team):
+    ourMinions = []
+    for entity in allEntities:
+        if isinstance(entity, Minion) and entity.team == team:
+            ourMinions.append(entity)
+
+    return ourMinions
+
+
 def readInEntities(entityCount):
+    global allEntities
     allEntities = []
 
     for i in range(entityCount):
@@ -95,15 +132,12 @@ def readInEntities(entityCount):
 
         allEntities.append(entity)
 
-    return allEntities
-
 
 def chooseHero():
     print HERO_DEADPOOL
 
 def unused():
-    bushAndSpawnPointCount = int(
-        raw_input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
+    bushAndSpawnPointCount = int(raw_input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
     for i in range(bushAndSpawnPointCount):
         # entityType: BUSH, from wood1 it can also be SPAWN
         entityType, x, y, radius = raw_input().split()
@@ -135,6 +169,7 @@ def printMove(move, turn):
     if turn % 10 == 0:
         curInsult = random.choice(INSULTS)
 
+    # Write an action using print
     print move + ";" + curInsult
 
 
@@ -142,8 +177,10 @@ def debug(objOrStr):
     if isinstance(objOrStr, Entity):
         print >> sys.stderr, objOrStr.__dict__
     elif isinstance(objOrStr, list):
+        debug("[")
         for el in objOrStr:
             debug(el)
+        debug("]")
     else:
         print >> sys.stderr, objOrStr
 
