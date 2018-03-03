@@ -138,8 +138,14 @@ def printMove(move, turn):
     print move + ";" + curInsult
 
 
-def debug(debugStr):
-    print >> sys.stderr, debugStr
+def debug(objOrStr):
+    if isinstance(objOrStr, Entity):
+        print >> sys.stderr, objOrStr.__dict__
+    elif isinstance(objOrStr, list):
+        for el in objOrStr:
+            debug(el)
+    else:
+        print >> sys.stderr, objOrStr
 
 ########################################################################################################################
 ########################################################################################################################
