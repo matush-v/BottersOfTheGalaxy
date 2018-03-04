@@ -58,6 +58,8 @@ def executeTurn(curTurn):
 
     # Find closest enemy minion to attack
     myHero = getHero(myTeam)
+
+    ## TODO find the closest entity to the spot we will move to! Not where we are currently, since we move before attacking
     minionToAttack = findClosestEntity(getMinions(otherTeam), myHero.posX, myHero.posY)
 
     if minionToAttack is not None:
