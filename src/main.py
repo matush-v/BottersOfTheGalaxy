@@ -98,7 +98,7 @@ def getDistanceBetweenEntities(entity1, entity2):
 ## Finds the entity farthest from the given coordinates. If only x is provided, only takes x into account. Same thing for y
 ## If both x and y are provided it takes the sum of the two (TODO maybe should be hypotenuse? Test to find out)
 def findFarthestEntity(entities, x=None, y=None):
-    if x is None or y is None:
+    if x is None and y is None:
         raise ValueError("either x or y must be provided to findFarthestEntity()")
 
     maxDist = None
@@ -121,7 +121,7 @@ def findFarthestEntity(entities, x=None, y=None):
 ## Finds the entity closest from the given coordinates. If only x is provided, only takes x into account. Same thing for y
 ## If both x and y are provided it takes the sum of the two (TODO maybe should be hypotenuse? Test to find out)
 def findClosestEntity(entities, x=None, y=None):
-    if x is None or y is None:
+    if x is None and y is None:
         raise ValueError("either x or y must be provided to findClosestEntity()")
 
     minDist = None
@@ -143,22 +143,19 @@ def findClosestEntity(entities, x=None, y=None):
 
 def findMinionForBodyShield(team):
     minions = getMinions(team)
+    tower = getTower(team)
 
     healthyMinions = [m for m in minions if not isLowHealth(m)]
 
     ## Look for a healthy minion first because we need a good body shield!
-    bodyShieldMinion = findMinionFarthestFromTower(healthyMinions, team)
+    ## NOTE that for now we look at the X direction ONLY when computing distance
+    bodyShieldMinion = findFarthestEntity(healthyMinions, tower.posX)
     if bodyShieldMinion is None:
+        oppositeTower = getTower(getOtherTeam(team))
         ## We don't have any healthy minions! Retreat to minion farthest from OPPOSITE tower
-        bodyShieldMinion = findMinionFarthestFromTower(minions, getOtherTeam(team))
+        bodyShieldMinion = findFarthestEntity(minions, oppositeTower.posX)
 
     return bodyShieldMinion
-
-
-## NOTE: for now this is the X direction ONLY
-def findMinionFarthestFromTower(minions, team):
-    tower = getTower(team)
-    return findFarthestEntity(minions, tower.posX, tower.posY)
 
 
 def isLowHealth(entity):
