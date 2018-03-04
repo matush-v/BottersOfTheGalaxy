@@ -83,21 +83,22 @@ def executeTurn(curTurn, gold):
 def getMostAffordableDamageOrMoveItemName(gold):
     damageItems = [i for i in allItems if "blade" in i.itemName.lower()]
     moveSpeedItems = [i for i in allItems if "boots" in i.itemName.lower()]
-    itemName = None
-
+    bestItem = None
+    bestItemName = None
     # Check for affordable items that raise damage first
     for item in damageItems:
-        if item.itemCost <= gold:
-            itemName = item.itemName
-            break
+        if (bestItem is None or item.damage > bestItem.damage) and item.itemCost <= gold:
+            bestItem = item
+            bestItemName = item.itemName
 
     # If no affordable items that raise damage then check for items that raise moveSpeed
-    if itemName is None:
+    if bestItem is None:
         for item in moveSpeedItems:
-            if item.itemCost <= gold:
-                itemName = item.itemName
+            if (bestItem is None or item.moveSpeed > bestItem.moveSpeed) and item.itemCost <= gold:
+                bestItem = item
+                bestItemName = item.itemName
 
-    return itemName
+    return bestItemName
 
 ## Use to decide whether to add or subtract for the X direction
 def getDirectionMultiplier(team):
