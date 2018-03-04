@@ -5,13 +5,8 @@ TODO
      UPDATES:
      1) Buy items with gold
      2) Avoid their tower and just go for their hero?
-     3) Attack plan
-        If tower:
-            attack tower
-        Else if (isEnemyHeroNear && our minions > their minions):
-            attack hero
-        Else if (areEnemyMinionsNear):
-            attack minions -----> We should pick the one in range with the lowest health! Not just the closest one
-     4) Improve what items we buy and when
+     3) When finding minions to attack, we should pick the one in range with the lowest health! Not just the closest one
+     4) Improve logic that determines when we should attack enemy hero
+     5) Improve what items we buy and when
             - maybe wait later to get more gold to buy better stuff rather than buy everything ASAP
-     5) Experiment with other heroes
+     6) Experiment with other heroes
