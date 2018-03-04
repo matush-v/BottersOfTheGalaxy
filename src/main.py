@@ -23,7 +23,7 @@ ACTION_SELL = "SELL"
 
 ### Globals
 curInsult = ""
-myTeam = None
+myTeam = 0
 allEntities = []
 
 def play():
@@ -56,8 +56,6 @@ def play():
 
 
 def executeTurn(curTurn, gold):
-    otherTeam = getOtherTeam(myTeam)
-
     # Hide behind our minions
     shieldMinion = findMinionForBodyShield(myTeam)
 
@@ -66,17 +64,34 @@ def executeTurn(curTurn, gold):
     if itemName is not None and curTurn <= 4:
         printMove(ACTION_BUY + " " + itemName, curTurn)
     elif shieldMinion is not None:
-        ## Find the closest enemy minion to the spot we will move to! Not where we are currently, since we move before attacking
-        minionToAttack = findClosestEntity(getMinions(otherTeam), shieldMinion.posX, shieldMinion.posY)
+        # Find enemy entity to attack after we move
+        enemyEntityToAttack = getEntityToAttack(getHero(myTeam), shieldMinion.posX, shieldMinion.posY)
 
-        if minionToAttack is not None:
-            printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY) + " " + str(minionToAttack.unitId), curTurn)
+        if enemyEntityToAttack is not None:
+            printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY) + " " + str(enemyEntityToAttack.unitId), curTurn)
         else:
             printMove(ACTION_MOVE + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY), curTurn)
     else:
         # We don't have a shield minion so we should move towards tower
         myTower = getTower(myTeam)
         printMove(ACTION_MOVE + " " + str(myTower.posX) + " " + str(myTower.posY), curTurn)
+
+
+def getEntityToAttack(attackingHero, attackFromX, attackFromY):
+    MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO = 1 # We need to have this many more minions than the enemy to attack their hero
+
+    attackingTeam = attackingHero.team
+    defendingTeam = getOtherTeam(attackingTeam)
+    defendingMinions = getMinions(defendingTeam)
+
+    ## If we aren't in range of their tower and our minion army overpowers their minion army, attack the hero!
+    if not getTower(defendingTeam).canAttack(attackFromX, attackFromY):
+        defendingHero = getHero(defendingTeam)
+        if len(getMinions(attackingTeam)) - len(defendingMinions) > MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO and defendingHero.isInRangeOf(attackingHero):
+            return defendingHero
+
+    ## Find the closest defending minion to the spot we will attack from!
+    return findClosestEntity(defendingMinions, attackFromX, attackFromX)
 
 # Use to buy an item with damage being priority and moveSpeed taking second, this will return an itemName
 # or None if neither are affordable
@@ -99,10 +114,10 @@ def getMostAffordableDamageOrMoveItemName(gold):
 
     return itemName
 
+
 ## Use to decide whether to add or subtract for the X direction
 def getDirectionMultiplier(team):
     return 1 if team == 0 else -1
-
 
 ## Returns true if entity 1 is closer to the given team's tower than entity 2 is
 ## NOTE this is the X direction ONLY for now
@@ -167,6 +182,10 @@ def getDistanceBetweenPoints(x1=None, y1=None, x2=None, y2=None):
 
 
 def findMinionForBodyShield(team):
+    """
+    :param int team: The team for which to find a minion
+    :rtype: Minion
+    """
     minions = getMinions(team)
     tower = getTower(team)
 
@@ -190,6 +209,8 @@ def isLowHealth(entity):
     lowHealthPercentage = 25
     return entity.health / entity.maxHealth < (entity.maxHealth * (lowHealthPercentage / 100))
 
+
+## TODO assumes only one hero per team
 def getHero(team):
     for entity in allEntities:
         if isinstance(entity, Hero) and entity.team == team:
@@ -349,6 +370,17 @@ class Entity(object):
         self.maxMana = maxMana
         self.attackDamage = attackDamage
         self.movementSpeed = movementSpeed
+
+
+    ## Return true if self is in range of the other entity's attack
+    def isInRangeOf(self, otherEntity):
+        return otherEntity.canAttack(self.posX, self.posY)
+
+
+    ## Return true if given (X,Y) coordinate is in attack range of self
+    def canAttack(self, posX, posY):
+        dist = getDistanceBetweenPoints(self.posX, self.posY, posX, posY)
+        return dist <= self.attackRange
 
 class Minion(Entity):
 
