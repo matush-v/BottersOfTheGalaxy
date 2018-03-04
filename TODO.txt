@@ -3,10 +3,10 @@ TODO
 - Do some winning strategy
   Potential Strat
      UPDATES:
-     1) Buy items with gold
-     2) Avoid their tower and just go for their hero?
-     3) When finding minions to attack, we should pick the one in range with the lowest health! Not just the closest one
-     4) Improve logic that determines when we should attack enemy hero
-     5) Improve what items we buy and when
-            - maybe wait later to get more gold to buy better stuff rather than buy everything ASAP
-     6) Experiment with other heroes
+     1) When finding minions to attack, we should pick the one in range with the lowest health! Not just the closest one
+     2) Improve logic that determines when we should attack enemy hero
+     3) Improve what items we buy and when
+            - build gold from last hits to buy best items when behind a shield minion
+     4) Avoid being in range of enemy hero's attack when they have more minions
+     5) Stand further behind shield minion to avoid hits from enemy minion while staying in range for our hero to attack minion
+     4) Experiment with other heroes

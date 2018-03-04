@@ -66,16 +66,24 @@ def executeTurn(curTurn, gold):
     elif shieldMinion is not None:
         # Find enemy entity to attack after we move
         enemyEntityToAttack = getEntityToAttack(getHero(myTeam), shieldMinion.posX, shieldMinion.posY)
+        enemyTower = getTower(getOtherTeam(myTeam))
 
         if enemyEntityToAttack is not None:
-            printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY) + " " + str(enemyEntityToAttack.unitId), curTurn)
+            printMove(ACTION_MOVE_ATTACK + " " + str(getFarthestXFromEntitysRange(enemyTower, shieldMinion.posX)) + " " + str(shieldMinion.posY) + " " + str(enemyEntityToAttack.unitId), curTurn)
         else:
-            printMove(ACTION_MOVE + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY), curTurn)
+            printMove(ACTION_MOVE + " " + str(getFarthestXFromEntitysRange(enemyTower, shieldMinion.posX)) + " " + str(shieldMinion.posY), curTurn)
     else:
         # We don't have a shield minion so we should move towards tower
         myTower = getTower(myTeam)
         printMove(ACTION_MOVE + " " + str(myTower.posX) + " " + str(myTower.posY), curTurn)
 
+# Takes an entity and an X value, returns the X value furthest from entitys attack range to avoid attack
+# Will return desired X or entity's X +/- attackRange depending on team of entity
+def getFarthestXFromEntitysRange(entity, desiredX):
+    if entity.team == 0:
+        return max(entity.posX + (getDirectionMultiplier(entity.team) * entity.attackRange), desiredX)
+    else:
+        return min(entity.posX + (getDirectionMultiplier(entity.team) * entity.attackRange), desiredX)
 
 def getEntityToAttack(attackingHero, attackFromX, attackFromY):
     MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO = 1 # We need to have this many more minions than the enemy to attack their hero
