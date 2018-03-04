@@ -5,6 +5,7 @@ import math
 ### CONSTANTS
 INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn",
            "dis some disrespect"]
+# TODO: use this at the end (not sure how we know when the end is....maybe when tower or hero is at a low health?)
 FINAL_INSULT = "2 ez. gg. no re"
 
 HERO_DEADPOOL = "DEADPOOL"
@@ -38,7 +39,7 @@ def play():
 
     # game loops
     while True:
-        gold = int(raw_input())
+        myGold = int(raw_input())
         enemyGold = int(raw_input())
         roundType = int(raw_input())  # a positive value will show the number of heroes that await a command
 
@@ -51,25 +52,56 @@ def play():
         # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         if roundType > 0:
-            executeTurn(curTurn, gold)
+            executeTurn(curTurn, myGold)
+            debug("curTurn " + `curTurn`)
             curTurn += 1
 
 
-def executeTurn(curTurn, gold):
+def executeTurn(curTurn, myGold):
+    possibleLastHits = getPossibleLastHits()
+
+    if possibleLastHits:
+        doLastHits(curTurn, possibleLastHits)
+    else:
+        hideBehindMinionShield(curTurn, myGold)
+
+def getPossibleLastHits():
+    myDmg = getHero(myTeam).attackDamage
+    dmgThreshold = myDmg * 0.30  # TODO: temp fix for giving Hero time to get to target
+    enemyMinionsToKill = []
+
+    for enemyMinion in getMinions(getOtherTeam(myTeam)):
+        if enemyMinion.health <= myDmg + dmgThreshold and \
+                not getTower(getOtherTeam(myTeam)).canAttack(enemyMinion.posX, enemyMinion.posY):
+            enemyMinionsToKill.append(enemyMinion)
+            debug("should be killing: " + `enemyMinion.unitId`)
+
+    return enemyMinionsToKill
+
+def doLastHits(curTurn, enemyMinionsToKill):
+    for enemyMinion in enemyMinionsToKill:
+        debug("actually killing: " + `enemyMinion.unitId`)
+        debug(enemyMinion)
+        printMoveAttack(enemyMinion.posX, enemyMinion.posY, enemyMinion.unitId, curTurn)
+
+def hideBehindMinionShield(curTurn, myGold):
     # Hide behind our minions
     shieldMinion = findMinionForBodyShield(myTeam)
 
-    itemName = getMostAffordableDamageOrMoveItemName(gold)
+    itemName = getMostAffordableDamageOrMoveItemName(myGold)
 
     if itemName is not None and curTurn <= 4:
         printMove(ACTION_BUY + " " + itemName, curTurn)
     elif shieldMinion is not None:
         # Find enemy entity to attack after we move
-        enemyEntityToAttack = getEntityToAttack(getHero(myTeam), shieldMinion.posX, shieldMinion.posY)
+        # enemyEntityToAttack = getEntityToAttack(getHero(myTeam), shieldMinion.posX, shieldMinion.posY)
+        #TODO: WILL NOT ATTACK EXCEPT FOR LAST HITS
+        enemyEntityToAttack = None
         enemyTower = getTower(getOtherTeam(myTeam))
 
         if enemyEntityToAttack is not None:
-            printMove(ACTION_MOVE_ATTACK + " " + str(getFarthestXFromEntitysRange(enemyTower, shieldMinion.posX)) + " " + str(shieldMinion.posY) + " " + str(enemyEntityToAttack.unitId), curTurn)
+            debug("SHOULD NEVER BE CALLED!!!")
+            printMoveAttack(getFarthestXFromEntitysRange(enemyTower, shieldMinion.posX), shieldMinion.posY, enemyEntityToAttack.unitId, curTurn)
         else:
             printMove(ACTION_MOVE + " " + str(getFarthestXFromEntitysRange(enemyTower, shieldMinion.posX)) + " " + str(shieldMinion.posY), curTurn)
     else:
@@ -237,12 +269,12 @@ def getTower(team):
 
 
 def getMinions(team):
-    ourMinions = []
+    minions = []
     for entity in allEntities:
         if isinstance(entity, Minion) and entity.team == team:
-            ourMinions.append(entity)
+            minions.append(entity)
 
-    return ourMinions
+    return minions
 
 
 def getOtherTeam(team):
@@ -336,6 +368,9 @@ def readInItems(itemCount):
         item = Item(itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion)
         allItems.append(item)
 
+def printMoveAttack(posX, posY, unitId, curTurn):
+    printMove('{} {} {} {}'.format(ACTION_MOVE_ATTACK, posX, posY, unitId), curTurn)
+
 def printMove(move, turn):
     global curInsult
 
@@ -345,7 +380,6 @@ def printMove(move, turn):
 
     # Write an action using print
     print move + ";" + curInsult
-
 
 def debug(objOrStr):
     if isinstance(objOrStr, Entity):
