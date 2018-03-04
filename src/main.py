@@ -31,6 +31,8 @@ def play():
 
     unused()
 
+    itemCount = int(raw_input())  # useful from wood2
+    readInItems(itemCount)
     curTurn = 1
 
     # game loops
@@ -48,11 +50,11 @@ def play():
         # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         if roundType > 0:
-            executeTurn(curTurn)
+            executeTurn(curTurn, gold)
             curTurn += 1
 
 
-def executeTurn(curTurn):
+def executeTurn(curTurn, gold):
     otherTeam = getOtherTeam(myTeam)
 
     # Hide behind our minions
@@ -63,9 +65,14 @@ def executeTurn(curTurn):
 
     ## TODO find the closest entity to the spot we will move to! Not where we are currently, since we move before attacking
     minionToAttack = findClosestEntity(getMinions(otherTeam), myHero.posX, myHero.posY)
+
     myTower = getTower(myTeam)
 
-    if shieldMinion is not None:
+    itemName = getMostAffordableDamageOrMoveItemName(gold)
+
+    if itemName is not None and curTurn <= 4:
+        printMove(ACTION_BUY + " " + itemName, curTurn)
+    elif shieldMinion is not None:
         if minionToAttack is not None:
             printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY) + " " + str(minionToAttack.unitId), curTurn)
         else:
@@ -74,6 +81,26 @@ def executeTurn(curTurn):
         # We don't have a shield minion so we should move towards tower
         printMove(ACTION_MOVE + " " + str(myTower.posX) + " " + str(myTower.posY), curTurn)
 
+# Use to buy an item with damage being priority and moveSpeed taking second, this will return an itemName
+# or None if neither are affordable
+def getMostAffordableDamageOrMoveItemName(gold):
+    damageItems = [i for i in allItems if "blade" in i.itemName.lower()]
+    moveSpeedItems = [i for i in allItems if "boots" in i.itemName.lower()]
+    itemName = None
+
+    # Check for affordable items that raise damage first
+    for item in damageItems:
+        if item.itemCost <= gold:
+            itemName = item.itemName
+            break
+
+    # If no affordable items that raise damage then check for items that raise moveSpeed
+    if itemName is None:
+        for item in moveSpeedItems:
+            if item.itemCost <= gold:
+                itemName = item.itemName
+
+    return itemName
 
 ## Use to decide whether to add or subtract for the X direction
 def getDirectionMultiplier(team):
@@ -256,7 +283,11 @@ def unused():
         x = int(x)
         y = int(y)
         radius = int(radius)
-    itemCount = int(raw_input())  # useful from wood2
+
+def readInItems(itemCount):
+    global allItems
+    allItems = []
+
     for i in range(itemCount):
         # itemName: contains keywords such as BRONZE, SILVER and BLADE, BOOTS connected by "" to help you sort easier
         # itemCost: BRONZE items have lowest cost, the most expensive items are LEGENDARY
@@ -273,6 +304,9 @@ def unused():
         moveSpeed = int(moveSpeed)
         manaRegeneration = int(manaRegeneration)
         isPotion = int(isPotion)
+
+        item = Item(itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion)
+        allItems.append(item)
 
 def printMove(move, turn):
     global curInsult
@@ -342,5 +376,18 @@ class Tower(Entity):
         super(Tower, self).__init__(unitId, ENTITY_TYPE_TOWER, team, posX, posY, attackRange=400, health=3000, maxHealth=3000,
                                     mana=0, maxMana=0, attackDamage=100, movementSpeed=0)
 
+class Item(object):
+
+    def __init__(self, itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion):
+        self.itemName = itemName
+        self.itemCost = itemCost
+        self.damage = damage
+        self.health = health
+        self.maxHealth = maxHealth
+        self.mana = mana
+        self.maxMana = maxMana
+        self.moveSpeed = moveSpeed
+        self.manaRegeneration = manaRegeneration
+        self.isPotion = isPotion
 
 play()

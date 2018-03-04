@@ -12,3 +12,4 @@ TODO
             attack hero
         Else if (areEnemyMinionsNear):
             attack minions
+     4) Improve what items we buy and when
