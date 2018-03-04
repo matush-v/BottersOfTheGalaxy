@@ -17,6 +17,8 @@ ACTION_MOVE = "MOVE"
 ACTION_ATTACK = "ATTACK"
 ACTION_ATTACK_NEAREST = "ATTACK_NEAREST"
 ACTION_MOVE_ATTACK = "MOVE_ATTACK"
+ACTION_BUY = "BUY"
+ACTION_SELL = "SELL"
 
 ### Globals
 curInsult = ""
@@ -61,13 +63,16 @@ def executeTurn(curTurn):
 
     ## TODO find the closest entity to the spot we will move to! Not where we are currently, since we move before attacking
     minionToAttack = findClosestEntity(getMinions(otherTeam), myHero.posX, myHero.posY)
+    myTower = getTower(myTeam)
 
-    if minionToAttack is not None:
-        printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY) + " " + str(minionToAttack.unitId), curTurn)
-    elif shieldMinion is not None:
-        printMove(ACTION_MOVE + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY), curTurn)
+    if shieldMinion is not None:
+        if minionToAttack is not None:
+            printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY) + " " + str(minionToAttack.unitId), curTurn)
+        else:
+            printMove(ACTION_MOVE + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY), curTurn)
     else:
-        printMove(ACTION_WAIT, curTurn)
+        # We don't have a shield minion so we should move towards tower
+        printMove(ACTION_MOVE + " " + str(myTower.posX) + " " + str(myTower.posY), curTurn)
 
 
 ## Use to decide whether to add or subtract for the X direction
@@ -93,7 +98,7 @@ def getDistanceBetweenEntities(entity1, entity2):
 ## Finds the entity farthest from the given coordinates. If only x is provided, only takes x into account. Same thing for y
 ## If both x and y are provided it takes the sum of the two (TODO maybe should be hypotenuse? Test to find out)
 def findFarthestEntity(entities, x=None, y=None):
-    if x is None and y is None:
+    if x is None or y is None:
         raise ValueError("either x or y must be provided to findFarthestEntity()")
 
     maxDist = None
@@ -116,7 +121,7 @@ def findFarthestEntity(entities, x=None, y=None):
 ## Finds the entity closest from the given coordinates. If only x is provided, only takes x into account. Same thing for y
 ## If both x and y are provided it takes the sum of the two (TODO maybe should be hypotenuse? Test to find out)
 def findClosestEntity(entities, x=None, y=None):
-    if x is None and y is None:
+    if x is None or y is None:
         raise ValueError("either x or y must be provided to findClosestEntity()")
 
     minDist = None
@@ -153,7 +158,7 @@ def findMinionForBodyShield(team):
 ## NOTE: for now this is the X direction ONLY
 def findMinionFarthestFromTower(minions, team):
     tower = getTower(team)
-    return findFarthestEntity(minions, tower.posX)
+    return findFarthestEntity(minions, tower.posX, tower.posY)
 
 
 def isLowHealth(entity):
