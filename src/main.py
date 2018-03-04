@@ -61,25 +61,21 @@ def executeTurn(curTurn, gold):
     # Hide behind our minions
     shieldMinion = findMinionForBodyShield(myTeam)
 
-    # Find closest enemy minion to attack
-    myHero = getHero(myTeam)
-
-    ## TODO find the closest entity to the spot we will move to! Not where we are currently, since we move before attacking
-    minionToAttack = findClosestEntity(getMinions(otherTeam), myHero.posX, myHero.posY)
-
-    myTower = getTower(myTeam)
-
     itemName = getMostAffordableDamageOrMoveItemName(gold)
 
     if itemName is not None and curTurn <= 4:
         printMove(ACTION_BUY + " " + itemName, curTurn)
     elif shieldMinion is not None:
+        ## Find the closest enemy minion to the spot we will move to! Not where we are currently, since we move before attacking
+        minionToAttack = findClosestEntity(getMinions(otherTeam), shieldMinion.posX, shieldMinion.posY)
+
         if minionToAttack is not None:
             printMove(ACTION_MOVE_ATTACK + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY) + " " + str(minionToAttack.unitId), curTurn)
         else:
             printMove(ACTION_MOVE + " " + str(shieldMinion.posX) + " " + str(shieldMinion.posY), curTurn)
     else:
         # We don't have a shield minion so we should move towards tower
+        myTower = getTower(myTeam)
         printMove(ACTION_MOVE + " " + str(myTower.posX) + " " + str(myTower.posY), curTurn)
 
 # Use to buy an item with damage being priority and moveSpeed taking second, this will return an itemName
@@ -109,25 +105,17 @@ def getDirectionMultiplier(team):
 
 
 ## Returns true if entity 1 is closer to the given team's tower than entity 2 is
+## NOTE this is the X direction ONLY for now
 def isCloserToTower(entity1, entity2, team):
     tower = getTower(team)
-    entity1Distance = abs(getDistanceBetweenEntities(tower, entity1))
-    entity2Distance = abs(getDistanceBetweenEntities(tower, entity2))
+    entity1Distance = abs(getDistanceBetweenPoints(x1=tower.posX, x2=entity1.posX))
+    entity2Distance = abs(getDistanceBetweenPoints(x1=tower.posX, x2=entity2.posX))
 
     return entity1Distance < entity2Distance
 
 
-## NOTE this is the X direction ONLY
-## Will return negative value if entity1 is farther left than entity 2 (otherwise positive)
-def getDistanceBetweenEntities(entity1, entity2):
-    return entity1.posX - entity2.posX
-
-
 ## Finds the entity farthest from the given coordinates.
 def findFarthestEntity(entities, x=None, y=None):
-    if x is None and y is None:
-        raise ValueError("either x or y must be provided to findFarthestEntity()")
-
     maxDist = None
     farthestEntity = None
 
@@ -143,9 +131,6 @@ def findFarthestEntity(entities, x=None, y=None):
 
 ## Finds the entity closest to the given coordinates
 def findClosestEntity(entities, x=None, y=None):
-    if x is None and y is None:
-        raise ValueError("either x or y must be provided to findClosestEntity()")
-
     minDist = None
     closestEntity = None
 
