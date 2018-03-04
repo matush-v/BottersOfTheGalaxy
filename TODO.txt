@@ -9,4 +9,7 @@ TODO
             - build gold from last hits to buy best items when behind a shield minion
      4) Avoid being in range of enemy hero's attack when they have more minions
      5) Stand further behind shield minion to avoid hits from enemy minion while staying in range for our hero to attack minion
-     4) Experiment with other heroes
+     6) Use our attackRange to move only as close as we to before attacking.
+        e.g we're at posX = 50 and enemy is at posX = 100. If our range is 30, we should move it posX = 70, not posX = 100 (which we do now)
+     7) Use last hits (MATUSH)
+     8) Experiment with other heroes
