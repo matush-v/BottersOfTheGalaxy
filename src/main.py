@@ -1,5 +1,6 @@
 import random
 import sys
+import math
 
 ### CONSTANTS
 INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn",
@@ -122,8 +123,7 @@ def getDistanceBetweenEntities(entity1, entity2):
     return entity1.posX - entity2.posX
 
 
-## Finds the entity farthest from the given coordinates. If only x is provided, only takes x into account. Same thing for y
-## If both x and y are provided it takes the sum of the two (TODO maybe should be hypotenuse? Test to find out)
+## Finds the entity farthest from the given coordinates.
 def findFarthestEntity(entities, x=None, y=None):
     if x is None and y is None:
         raise ValueError("either x or y must be provided to findFarthestEntity()")
@@ -132,11 +132,7 @@ def findFarthestEntity(entities, x=None, y=None):
     farthestEntity = None
 
     for e in entities:
-        dist = 0
-        if x is not None:
-            dist += abs(e.posX - x)
-        elif y is not None:
-            dist += abs(e.posY - y)
+        dist = getDistanceBetweenPoints(e.posX, e.posY, x, y)
 
         if maxDist is None or dist > maxDist:
                 farthestEntity = e
@@ -145,8 +141,7 @@ def findFarthestEntity(entities, x=None, y=None):
     return farthestEntity
 
 
-## Finds the entity closest from the given coordinates. If only x is provided, only takes x into account. Same thing for y
-## If both x and y are provided it takes the sum of the two (TODO maybe should be hypotenuse? Test to find out)
+## Finds the entity closest to the given coordinates
 def findClosestEntity(entities, x=None, y=None):
     if x is None and y is None:
         raise ValueError("either x or y must be provided to findClosestEntity()")
@@ -155,17 +150,35 @@ def findClosestEntity(entities, x=None, y=None):
     closestEntity = None
 
     for e in entities:
-        dist = 0
-        if x is not None:
-            dist += abs(e.posX - x)
-        if y is not None:
-            dist += abs(e.posY - y)
+        dist = getDistanceBetweenPoints(e.posX, e.posY, x, y)
 
         if minDist is None or dist < minDist:
                 closestEntity = e
                 minDist = dist
 
     return closestEntity
+
+
+## NOTE: This is absolute value! Doesn't take direction into account at all
+## If only x is provided, only takes x into account. Same thing for y
+## If both x and y are provided it calculates the hypotenuse
+def getDistanceBetweenPoints(x1=None, y1=None, x2=None, y2=None):
+    xDist = None
+    yDist = None
+
+    if x1 is not None and x2 is not None:
+        xDist = abs(x1 - x2)
+    elif y1 is not None and y2 is not None:
+        yDist = abs(y1 - y2)
+    else:
+        raise ValueError("either x or y must be provided to getDistanceBetweenPoints()")
+
+    if xDist is not None and yDist is not None:
+        return math.sqrt(xDist * xDist + yDist * yDist)
+    elif xDist is not None:
+        return xDist
+    else:
+        return yDist
 
 
 def findMinionForBodyShield(team):
