@@ -3,7 +3,8 @@ TODO
 - Do some winning strategy
   Potential Strat
      UPDATES:
-     1) Account for Hero 2 input
+     0) handle new input (GROOT entity type and bush parsing -- should just be the unused fields)
+     1) Account for Hero 2 output
      2) Improve logic that determines when we should attack enemy hero
      3) Improve what items we buy and when
             - build gold from last hits to buy best items when behind a shield minion
