@@ -3,13 +3,19 @@ TODO
 - Do some winning strategy
   Potential Strat
      UPDATES:
-     1) When finding minions to attack, we should pick the one in range with the lowest health! Not just the closest one
+     1) Account for Hero 2 input
      2) Improve logic that determines when we should attack enemy hero
      3) Improve what items we buy and when
             - build gold from last hits to buy best items when behind a shield minion
+            - Matush's thoughts:
+                - early game -> buy one thing
+                - mid game -> buy 2 things
+                - late game -> sell early game item when that'll get us to afford the best item, buy best item
      4) Avoid being in range of enemy hero's attack when they have more minions
-     5) Stand further behind shield minion to avoid hits from enemy minion while staying in range for our hero to attack minion
      6) Use our attackRange to move only as close as we to before attacking.
         e.g we're at posX = 50 and enemy is at posX = 100. If our range is 30, we should move it posX = 70, not posX = 100 (which we do now)
-     7) Use last hits (MATUSH)
+     7) Improve last hits
+        a) there's a lot of testing we can do here. Matush left some older strategies commented out in the method
+           that could be worth exploring
      8) Experiment with other heroes
+        a) ranged works much better for us since we don't distance ourselves properly just yet
