@@ -8,8 +8,7 @@ INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "
 # TODO: use this at the end (not sure how we know when the end is....maybe when tower or hero is at a low health?)
 FINAL_INSULT = "2 ez. gg. no re"
 
-HERO_DEADPOOL = "DEADPOOL"
-HERO_IRONMAN = "IRONMAN"
+UNUSED_HEROS = ["DEADPOOL", "IRONMAN", "HULK", "VALKYRIE", "DOCTOR_STRANGE"]
 
 ENTITY_TYPE_MINION = "UNIT"
 ENTITY_TYPE_HERO = "HERO"
@@ -381,7 +380,8 @@ def readInEntities(entityCount):
 
 
 def chooseHero():
-    print HERO_IRONMAN
+    print UNUSED_HEROS[0]
+    UNUSED_HEROS.pop(0)
 
 def unused():
     bushAndSpawnPointCount = int(raw_input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
