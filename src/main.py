@@ -167,9 +167,8 @@ def getAverageMinionDistance(team):
 
 # Will return None if no last hits are available
 def getBestPossibleLastHit():
-    # TODO: limit the distance away our Hero is willing to travel to get the kill (gets hit too much when it's out there)
     myDmg = getHero(myTeam).attackDamage
-    dmgThreshold = myDmg * 0.30  # TODO: temp fix for giving Hero time to get to target
+    dmgThreshold = myDmg * 0.30  # TODO: temp fix for giving Hero time to get to target. If we aren't moving closer to the target this shouldn't be needed
     enemyMinionsToKill = []
 
     for enemyMinion in getMinions(getOtherTeam(myTeam)):
