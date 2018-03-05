@@ -90,15 +90,15 @@ def doLastHit(curTurn, enemyMinion):
     printMoveAttack(enemyMinion.posX, enemyMinion.posY, enemyMinion.unitId, curTurn)
 
 def isBehindMinion(hero):
-    shieldMinion = findMinionForBodyShield(hero.team)
+    minionFurthestAhead = findMinionFurthestAhead(hero.team)
 
-    if shieldMinion is None:
+    if minionFurthestAhead is None:
         return False
 
     if hero.team == 0:
-        return hero.posX <= shieldMinion.posX
+        return hero.posX <= minionFurthestAhead.posX
     elif hero.team == 1:
-        return hero.posX >= shieldMinion.posX
+        return hero.posX >= minionFurthestAhead.posX
     else:
         raise ValueError("Who's team are you on bro?!")
 
@@ -114,28 +114,43 @@ def getPossibleItemToBuy(myGold):
             if myGold >= potion.itemCost:
                 return potion.itemName
 
-    #TODO: it kept buying boots....
-    # return getMostAffordableDamageOrMoveItemName(myGold)
+    # leave space for potion
+    if getHero(myTeam).itemsOwned == 3:
+        return None
+
+    return getMostAffordableDamageOrMoveItemName(myGold)
 
 def buyItem(itemName, curTurn):
     printMove(ACTION_BUY + " " + itemName, curTurn)
 
 def hideBehindMinionShield(curTurn):
     # Hide behind our minions
-    shieldMinion = findMinionForBodyShield(myTeam)
+    myTeamMinions = getMinions(myTeam)
+    totalDistance = 0
+    bufferXDistance = 75
 
-    if shieldMinion is not None:
+    for minion in myTeamMinions:
+        totalDistance += minion.posX
+
+    if len(myTeamMinions) > 1:
+        avgXPos = totalDistance / len(myTeamMinions)
+    else:
+        avgXPos = totalDistance + (bufferXDistance * getDirectionMultiplier(myTeam))
+
+    minionFurthestAhead = findMinionFurthestAhead(myTeam)
+
+    if minionFurthestAhead is not None:
         # Find enemy entity to attack after we move
-        # enemyEntityToAttack = getEntityToAttack(getHero(myTeam), shieldMinion.posX, shieldMinion.posY)
+        # enemyEntityToAttack = getEntityToAttack(getHero(myTeam), minionFurthestAhead.posX, minionFurthestAhead.posY)
         #TODO: NOTE: WILL NOT ATTACK EXCEPT FOR LAST HITS
         enemyEntityToAttack = None
         enemyTower = getTower(getOtherTeam(myTeam))
 
         if enemyEntityToAttack is not None:
             debug("SHOULD NEVER BE CALLED!!!")
-            printMoveAttack(getFarthestXFromEntitysRange(enemyTower, shieldMinion.posX), shieldMinion.posY, enemyEntityToAttack.unitId, curTurn)
+            printMoveAttack(getFarthestXFromEntitysRange(enemyTower, avgXPos), minionFurthestAhead.posY, enemyEntityToAttack.unitId, curTurn)
         else:
-            printMove(ACTION_MOVE + " " + str(getFarthestXFromEntitysRange(enemyTower, shieldMinion.posX)) + " " + str(shieldMinion.posY), curTurn)
+            printMove(ACTION_MOVE + " " + str(getFarthestXFromEntitysRange(enemyTower, avgXPos)) + " " + str(minionFurthestAhead.posY), curTurn)
     else:
         # We don't have a shield minion so we should move towards tower
         myTower = getTower(myTeam)
@@ -179,11 +194,11 @@ def getMostAffordableDamageOrMoveItemName(gold):
             bestItemName = item.itemName
 
     # If no affordable items that raise damage then check for items that raise moveSpeed
-    if bestItem is None:
-        for item in moveSpeedItems:
-            if (bestItem is None or item.moveSpeed > bestItem.moveSpeed) and item.itemCost <= gold:
-                bestItem = item
-                bestItemName = item.itemName
+    # if bestItem is None:
+    #     for item in moveSpeedItems:
+    #         if (bestItem is None or item.moveSpeed > bestItem.moveSpeed) and item.itemCost <= gold:
+    #             bestItem = item
+    #             bestItemName = item.itemName
 
     return bestItemName
 
@@ -257,7 +272,7 @@ def getDistanceBetweenPoints(x1=None, y1=None, x2=None, y2=None):
         return yDist
 
 
-def findMinionForBodyShield(team):
+def findMinionFurthestAhead(team):
     """
     :param int team: The team for which to find a minion
     :rtype: Minion
