@@ -39,6 +39,8 @@ def play():
 
     # game loops
     while True:
+        debug("curTurn " + `curTurn`)
+
         myGold = int(raw_input())
         enemyGold = int(raw_input())
         roundType = int(raw_input())  # a positive value will show the number of heroes that await a command
@@ -53,19 +55,23 @@ def play():
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         if roundType > 0:
             executeTurn(curTurn, myGold)
-            debug("curTurn " + `curTurn`)
             curTurn += 1
 
 
 def executeTurn(curTurn, myGold):
-    possibleLastHits = getPossibleLastHits()
+    possibleLastHit = getBestPossibleLastHit()
+    possibleItem = getPossibleItemToBuy(myGold)
 
-    if possibleLastHits:
-        doLastHits(curTurn, possibleLastHits)
+    if possibleLastHit:
+        doLastHit(curTurn, possibleLastHit)
+    elif isBehindMinion(getHero(myTeam)) and possibleItem:
+        #buy item IFF behind minion shield (for now at least)
+        buyItem(possibleItem, curTurn)
     else:
-        hideBehindMinionShield(curTurn, myGold)
+        hideBehindMinionShield(curTurn)
 
-def getPossibleLastHits():
+def getBestPossibleLastHit():
+    # TODO: limit the distance away our Hero is willing to travel to get the kill (gets hit too much when it's out there)
     myDmg = getHero(myTeam).attackDamage
     dmgThreshold = myDmg * 0.30  # TODO: temp fix for giving Hero time to get to target
     enemyMinionsToKill = []
@@ -75,27 +81,53 @@ def getPossibleLastHits():
                 not getTower(getOtherTeam(myTeam)).canAttack(enemyMinion.posX, enemyMinion.posY):
             enemyMinionsToKill.append(enemyMinion)
             debug("should be killing: " + `enemyMinion.unitId`)
+    return findClosestEntity(enemyMinionsToKill, getHero(myTeam).posX, getHero(myTeam).posY)
+    # return min(enemyMinionsToKill, key=lambda minion: minion.health) if len(enemyMinionsToKill) > 0 else None
 
-    return enemyMinionsToKill
+def doLastHit(curTurn, enemyMinion):
+    debug("actually killing: " + `enemyMinion.unitId`)
+    debug(enemyMinion)
+    printMoveAttack(enemyMinion.posX, enemyMinion.posY, enemyMinion.unitId, curTurn)
 
-def doLastHits(curTurn, enemyMinionsToKill):
-    for enemyMinion in enemyMinionsToKill:
-        debug("actually killing: " + `enemyMinion.unitId`)
-        debug(enemyMinion)
-        printMoveAttack(enemyMinion.posX, enemyMinion.posY, enemyMinion.unitId, curTurn)
+def isBehindMinion(hero):
+    shieldMinion = findMinionForBodyShield(hero.team)
 
-def hideBehindMinionShield(curTurn, myGold):
+    if shieldMinion is None:
+        return False
+
+    if hero.team == 0:
+        return hero.posX <= shieldMinion.posX
+    elif hero.team == 1:
+        return hero.posX >= shieldMinion.posX
+    else:
+        raise ValueError("Who's team are you on bro?!")
+
+def getPossibleItemToBuy(myGold):
+    #if health is below 50%, buy the biggest health potion (should be the 500 health one)
+    if getHero(myTeam).health < (getHero(myTeam).maxHealth / 2.0):
+        debug("HEALTH BELOW 50%")
+        potions = getPotions()
+        potions.sort(key=lambda potion: potion.health, reverse=True)
+        for potion in potions:
+            debug(potion)
+            debug(myGold)
+            if myGold >= potion.itemCost:
+                return potion.itemName
+
+    #TODO: it kept buying boots....
+    # return getMostAffordableDamageOrMoveItemName(myGold)
+
+def buyItem(itemName, curTurn):
+    printMove(ACTION_BUY + " " + itemName, curTurn)
+
+def hideBehindMinionShield(curTurn):
     # Hide behind our minions
     shieldMinion = findMinionForBodyShield(myTeam)
 
-    itemName = getMostAffordableDamageOrMoveItemName(myGold)
-
-    if itemName is not None and curTurn <= 4:
-        printMove(ACTION_BUY + " " + itemName, curTurn)
-    elif shieldMinion is not None:
+    if shieldMinion is not None:
         # Find enemy entity to attack after we move
         # enemyEntityToAttack = getEntityToAttack(getHero(myTeam), shieldMinion.posX, shieldMinion.posY)
-        #TODO: WILL NOT ATTACK EXCEPT FOR LAST HITS
+        #TODO: NOTE: WILL NOT ATTACK EXCEPT FOR LAST HITS
         enemyEntityToAttack = None
         enemyTower = getTower(getOtherTeam(myTeam))
 
@@ -154,6 +186,9 @@ def getMostAffordableDamageOrMoveItemName(gold):
                 bestItemName = item.itemName
 
     return bestItemName
+
+def getPotions():
+    return [item for item in allItems if item.isPotion]
 
 
 ## Use to decide whether to add or subtract for the X direction
@@ -383,6 +418,8 @@ def printMove(move, turn):
 
 def debug(objOrStr):
     if isinstance(objOrStr, Entity):
+        print >> sys.stderr, objOrStr.__dict__
+    elif isinstance(objOrStr, Item):
         print >> sys.stderr, objOrStr.__dict__
     elif isinstance(objOrStr, list):
         debug("[")
