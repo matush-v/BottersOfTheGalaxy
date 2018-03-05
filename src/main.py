@@ -135,7 +135,7 @@ def hideBehindMinionShield(curTurn):
     if len(myTeamMinions) > 1:
         avgXPos = totalDistance / len(myTeamMinions)
     else:
-        avgXPos = totalDistance + (bufferXDistance * getDirectionMultiplier(myTeam))
+        avgXPos = totalDistance - (bufferXDistance * getDirectionMultiplier(myTeam))
 
     minionFurthestAhead = findMinionFurthestAhead(myTeam)
 
