@@ -13,6 +13,7 @@ UNUSED_HEROS = ["DEADPOOL", "IRONMAN", "HULK", "VALKYRIE", "DOCTOR_STRANGE"]
 ENTITY_TYPE_MINION = "UNIT"
 ENTITY_TYPE_HERO = "HERO"
 ENTITY_TYPE_TOWER = "TOWER"
+ENTITY_TYPE_GROOT = "GROOT"
 
 ACTION_WAIT = "WAIT"
 ACTION_MOVE = "MOVE"
@@ -54,7 +55,8 @@ def play():
         # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
         # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         if roundType > 0:
-            executeTurn(curTurn, myGold)
+            for x in xrange(roundType):
+                executeTurn(curTurn, myGold)
             curTurn += 1
 
 
@@ -197,7 +199,7 @@ def getEntityToAttack(attackingHero, attackFromX, attackFromY):
     ## If we aren't in range of their tower and our minion army overpowers their minion army, attack the hero!
     if not getTower(defendingTeam).canAttack(attackFromX, attackFromY):
         defendingHero = getHero(defendingTeam)
-        if len(getMinions(attackingTeam)) - len(defendingMinions) > MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO and defendingHero.isInRangeOf(attackingHero):
+        if defendingHero is not None and len(getMinions(attackingTeam)) - len(defendingMinions) > MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO and defendingHero.isInRangeOf(attackingHero):
             return defendingHero
 
     ## Find the closest defending minion to the spot we will attack from!
@@ -304,15 +306,16 @@ def getHero(team):
         if isinstance(entity, Hero) and entity.team == team:
             return entity
 
-    raise ValueError("Missing hero for team " + team)
-
+    # Possible that enemy hero is invisible, so none would be in the list
+    # Todo: If our heroes are invisible are they also not in the list (they have to be...no way)
+    return None
 
 def getTower(team):
     for entity in allEntities:
         if isinstance(entity, Tower) and entity.team == team:
             return entity
 
-    raise ValueError("Missing tower for team " + team)
+    raise ValueError("Missing tower for team " + `team`)
 
 
 def getMinions(team):
@@ -372,6 +375,8 @@ def readInEntities(entityCount):
                           attackDamage, movementSpeed, manaRegeneration, isVisible, itemsOwned)
         elif entityType == ENTITY_TYPE_TOWER:
             entity = Tower(unitId, team, x, y)
+        elif entityType == ENTITY_TYPE_GROOT:
+            entity = Groot(unitId, team, x, y, attackRange, health, maxHealth, attackDamage, movementSpeed)
 
         if entity is None:
             raise ValueError("unknown entity type " + entityType)
@@ -498,6 +503,12 @@ class Tower(Entity):
     def __init__(self, unitId, team, posX, posY):
         super(Tower, self).__init__(unitId, ENTITY_TYPE_TOWER, team, posX, posY, attackRange=400, health=3000, maxHealth=3000,
                                     mana=0, maxMana=0, attackDamage=100, movementSpeed=0)
+
+class Groot(Entity):
+
+    def __init__(self, unitId, team, posX, posY, attackRange, health, maxHealth, attackDamage, movementSpeed):
+        super(Groot, self).__init__(unitId, ENTITY_TYPE_TOWER, team, posX, posY, attackRange, health, maxHealth,
+                                    mana=0, maxMana=0, attackDamage=attackRange, movementSpeed=movementSpeed)
 
 class Item(object):
 
