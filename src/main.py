@@ -9,6 +9,7 @@ INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "
 FINAL_INSULT = "2 ez. gg. no re"
 
 HERO_DEADPOOL = "DEADPOOL"
+HERO_IRONMAN = "IRONMAN"
 
 ENTITY_TYPE_MINION = "UNIT"
 ENTITY_TYPE_HERO = "HERO"
@@ -62,7 +63,7 @@ def executeTurn(curTurn, myGold):
     possibleLastHit = getBestPossibleLastHit()
     possibleItem = getPossibleItemToBuy(myGold)
 
-    if possibleLastHit:
+    if False:
         doLastHit(curTurn, possibleLastHit)
     elif isBehindMinion(getHero(myTeam)) and possibleItem:
         #buy item IFF behind minion shield (for now at least)
@@ -141,13 +142,13 @@ def hideBehindMinionShield(curTurn):
 
     if minionFurthestAhead is not None:
         # Find enemy entity to attack after we move
-        # enemyEntityToAttack = getEntityToAttack(getHero(myTeam), minionFurthestAhead.posX, minionFurthestAhead.posY)
+        enemyEntityToAttack = getBestPossibleLastHit()
+        if not enemyEntityToAttack:
+            enemyEntityToAttack = getEntityToAttack(getHero(myTeam), minionFurthestAhead.posX, minionFurthestAhead.posY)
         #TODO: NOTE: WILL NOT ATTACK EXCEPT FOR LAST HITS
-        enemyEntityToAttack = None
         enemyTower = getTower(getOtherTeam(myTeam))
 
         if enemyEntityToAttack is not None:
-            debug("SHOULD NEVER BE CALLED!!!")
             printMoveAttack(getFarthestXFromEntitysRange(enemyTower, avgXPos), minionFurthestAhead.posY, enemyEntityToAttack.unitId, curTurn)
         else:
             printMove(ACTION_MOVE + " " + str(getFarthestXFromEntitysRange(enemyTower, avgXPos)) + " " + str(minionFurthestAhead.posY), curTurn)
@@ -383,7 +384,7 @@ def readInEntities(entityCount):
 
 
 def chooseHero():
-    print HERO_DEADPOOL
+    print HERO_IRONMAN
 
 def unused():
     bushAndSpawnPointCount = int(raw_input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
