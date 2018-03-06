@@ -1,6 +1,7 @@
 import random
 import sys
 import math
+import copy
 
 ### CONSTANTS
 INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "2 + 2 don't know what it is!", "yawn",
@@ -8,7 +9,8 @@ INSULTS = ["come at me", "who's your daddy", "is this LoL", "cash me outside", "
 # TODO: use this at the end (not sure how we know when the end is....maybe when tower or hero is at a low health?)
 FINAL_INSULT = "2 ez. gg. no re"
 
-UNUSED_HEROS = ["DEADPOOL", "IRONMAN", "HULK", "VALKYRIE", "DOCTOR_STRANGE"]
+UNUSED_HEROES = ["DEADPOOL", "IRONMAN", "HULK", "VALKYRIE", "DOCTOR_STRANGE"]
+CHOSEN_ALIVE_HEROES = []
 
 ENTITY_TYPE_MINION = "UNIT"
 ENTITY_TYPE_HERO = "HERO"
@@ -27,9 +29,10 @@ ACTION_SELL = "SELL"
 curInsult = ""
 myTeam = 0
 allEntities = []
+myGold = 0
 
 def play():
-    global myTeam, allEntities
+    global myTeam, allEntities, myGold
     myTeam = int(raw_input())
 
     unused()
@@ -44,31 +47,48 @@ def play():
 
         myGold = int(raw_input())
         enemyGold = int(raw_input())
-        roundType = int(raw_input())  # a positive value will show the number of heroes that await a command
+        roundType = int(raw_input())
 
+        # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
         if roundType < 0:
             chooseHero()
 
+        # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
         entityCount = int(raw_input())
         readInEntities(entityCount)
 
-        # If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
-        # Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
+        # a positive value will show the number of heroes that await a command
         if roundType > 0:
-            for x in xrange(roundType):
-                executeTurn(curTurn, myGold)
+            updateMyHeroes()
+            for heroIndex in xrange(roundType):
+                curHero = getHeroByType(myTeam, CHOSEN_ALIVE_HEROES[heroIndex])
+                executeTurn(curTurn, curHero)
             curTurn += 1
 
 
-def executeTurn(curTurn, myGold):
-    possibleItem = getPossibleItemToBuy(myGold)
+def updateMyHeroes():
+    myAliveHeroes = getHeroes(myTeam)
+    for heroType in CHOSEN_ALIVE_HEROES:
+        if not containsHeroOfType(myAliveHeroes, heroType):
+            CHOSEN_ALIVE_HEROES.remove(heroType)
+
+
+def containsHeroOfType(heroes, heroType):
+    for h in heroes:
+        if h.heroType == heroType:
+            return True
+    return False
+
+
+def executeTurn(curTurn, myHero):
+    possibleItem = getPossibleItemToBuy(myHero)
 
     # TODO: once the item purchase is improved, this will run much better
-    if isBehindMinion(getHero(myTeam)) and possibleItem:
+    if isBehindMinion(myHero) and possibleItem: ## ## SD - shouldn't this check if we are behind the average minions? Not just that we are behind a single minion?
         # buy item IFF behind minion shield (for now at least)
-        buyItem(possibleItem, curTurn)
+        buyItem(myHero, possibleItem, curTurn)
     else:
-        attackAndOrMove(curTurn)
+        attackAndOrMove(myHero, curTurn)
 
 def isBehindMinion(hero):
     minionFurthestAhead = findMinionFurthestAhead(hero.team)
@@ -81,36 +101,35 @@ def isBehindMinion(hero):
     elif hero.team == 1:
         return hero.posX >= minionFurthestAhead.posX
     else:
-        raise ValueError("Who's team are you on bro?!")
+        raise ValueError("Whose team are you on bro?!")
 
-def getPossibleItemToBuy(myGold):
+def getPossibleItemToBuy(myHero):
     # TODO: improve our item selection
     #if health is below 50%, buy the biggest health potion (should be the 500 health one)
-    if getHero(myTeam).health < (getHero(myTeam).maxHealth / 2.0):
+    if myHero.health < (myHero.maxHealth / 2.0):
         potions = getPotions()
         potions.sort(key=lambda potion: potion.health, reverse=True)
         for potion in potions:
             if myGold >= potion.itemCost:
-                return potion.itemName
+                return potion
 
     # leave space for potion
-    if getHero(myTeam).itemsOwned == 3:
+    if myHero.itemsOwned == 3:
         return None
 
-    return getMostAffordableDamageOrMoveItemName(myGold)
+    return getMostAffordableDamageOrMoveItem(myGold)
 
 # Use to buy an item with damage being priority and moveSpeed taking second, this will return an itemName
 # or None if neither are affordable
-def getMostAffordableDamageOrMoveItemName(gold):
+def getMostAffordableDamageOrMoveItem(gold):
     damageItems = [i for i in allItems if "blade" in i.itemName.lower()]
     moveSpeedItems = [i for i in allItems if "boots" in i.itemName.lower()]
     bestItem = None
-    bestItemName = None
+
     # Check for affordable items that raise damage first
     for item in damageItems:
         if (bestItem is None or item.damage > bestItem.damage) and item.itemCost <= gold:
             bestItem = item
-            bestItemName = item.itemName
 
     #TODO: I didn't use this cause it was a fall back, improving item selection will make this better
     #      We should wait for money and buy the better items later game (maybe make the choice based on turn?)
@@ -120,36 +139,38 @@ def getMostAffordableDamageOrMoveItemName(gold):
     #     for item in moveSpeedItems:
     #         if (bestItem is None or item.moveSpeed > bestItem.moveSpeed) and item.itemCost <= gold:
     #             bestItem = item
-    #             bestItemName = item.itemName
 
-    return bestItemName
+    return bestItem
 
 def getPotions():
     return [item for item in allItems if item.isPotion]
 
-def buyItem(itemName, curTurn):
-    printMove(ACTION_BUY + " " + itemName, curTurn)
+def buyItem(myHero, item, curTurn):
+    global myGold
 
-def attackAndOrMove(curTurn):
+    myHero.itemsOwned += 1
+    myGold -=  item.itemCost
+    printAction(ACTION_BUY + " " + item.itemName, curTurn)
+
+def attackAndOrMove(myHero, curTurn):
     avgMinionXPos = getAverageMinionDistance(myTeam)
     minionFurthestAhead = findMinionFurthestAhead(myTeam)
 
     if minionFurthestAhead is not None:
-        # Find enemy entity to attack after we move
-        # Try to hit the enemy minion that will die with one hit so we get gold
-        # Fall back to attacking something else
-        enemyEntityToAttack = getBestPossibleLastHit() or getEntityToAttack(getHero(myTeam), minionFurthestAhead.posX, minionFurthestAhead.posY)
         enemyTower = getTower(getOtherTeam(myTeam))
+        desiredPosX = getFarthestXOutsideRange(enemyTower, avgMinionXPos)
+        desiredPosY = minionFurthestAhead.posY
+        enemyEntityToAttack = getEntityToAttack(myHero, desiredPosX, desiredPosY)
 
         if enemyEntityToAttack is not None:
-            printMoveAttack(getFarthestXFromEntitysRange(enemyTower, avgMinionXPos), minionFurthestAhead.posY, enemyEntityToAttack.unitId, curTurn)
+            printMoveAttack(desiredPosX, desiredPosY, enemyEntityToAttack.unitId, curTurn)
         else:
             # Hide behind our minions
-            printMove(ACTION_MOVE + " " + str(getFarthestXFromEntitysRange(enemyTower, avgMinionXPos)) + " " + str(minionFurthestAhead.posY), curTurn)
+            printAction(ACTION_MOVE + " " + str(desiredPosX) + " " + str(desiredPosY), curTurn)
     else:
-        # We don't have a shield minion so we should move towards tower
+        # We don't have a shield minion so we should move towards our tower
         myTower = getTower(myTeam)
-        printMove(ACTION_MOVE + " " + str(myTower.posX) + " " + str(myTower.posY), curTurn)
+        printAction(ACTION_MOVE + " " + str(myTower.posX) + " " + str(myTower.posY), curTurn)
 
 def getAverageMinionDistance(team):
     myTeamMinions = getMinions(team)
@@ -161,53 +182,78 @@ def getAverageMinionDistance(team):
 
     if len(myTeamMinions) > 1:
         avgXPos = totalMinionDistance / len(myTeamMinions)
-    else:
+    else: ## SD - couldn't this return a negative number if we don't have any minions or if the last minion is at an xPos < 75?
         avgXPos = totalMinionDistance - (bufferXDistance * getDirectionMultiplier(myTeam))
 
     return avgXPos
 
 # Will return None if no last hits are available
-def getBestPossibleLastHit():
-    myDmg = getHero(myTeam).attackDamage
+def getBestPossibleLastHit(attackingHero, attackFromX, attackFromY):
+    myDmg = attackingHero.attackDamage
     dmgThreshold = myDmg * 0.30  # TODO: temp fix for giving Hero time to get to target. If we aren't moving closer to the target this shouldn't be needed
     enemyMinionsToKill = []
+    movedHero = copy.deepcopy(attackingHero) ## write a better func than this
+    movedHero.posX = attackFromX
+    movedHero.posY = attackFromY
 
     for enemyMinion in getMinions(getOtherTeam(myTeam)):
-        if enemyMinion.health <= myDmg + dmgThreshold and \
+        if enemyMinion.isInRangeOf(movedHero) and enemyMinion.health <= myDmg + dmgThreshold and \
                 not getTower(getOtherTeam(myTeam)).canAttack(enemyMinion.posX, enemyMinion.posY):
             enemyMinionsToKill.append(enemyMinion)
-    return findClosestEntity(enemyMinionsToKill, getHero(myTeam).posX, getHero(myTeam).posY)
+    return findClosestEntity(enemyMinionsToKill, movedHero.posX, movedHero.posY)
     #TODO: this was an old strategy for getting best last hit. It's worth trying it out again once the Hero 2 input is accounted for
     # return min(enemyMinionsToKill, key=lambda minion: minion.health) if len(enemyMinionsToKill) > 0 else None
 
 
-# Takes an entity and an X value, returns the X value furthest from entitys attack range to avoid attack
+# Takes an entity and an X value, returns the X value closest to the desired X while staying just outside the given entity's attack range
 # Will return desired X or entity's X +/- attackRange depending on team of entity
-def getFarthestXFromEntitysRange(entity, desiredX):
+def getFarthestXOutsideRange(entity, desiredX):
     if entity.team == 0:
-        return max(entity.posX + (getDirectionMultiplier(entity.team) * entity.attackRange), desiredX)
+        return max(entity.posX + (getDirectionMultiplier(entity.team) * entity.attackRange + 1), desiredX)
     else:
-        return min(entity.posX + (getDirectionMultiplier(entity.team) * entity.attackRange), desiredX)
+        return min(entity.posX + (getDirectionMultiplier(entity.team) * entity.attackRange + 1), desiredX)
 
+
+# Determines which enemy entity to attack for a given turn
+# Takes in the hero that is attacking, as well as the (X,Y) coordinate he will attack from
 def getEntityToAttack(attackingHero, attackFromX, attackFromY):
-    MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO = 1 # We need to have this many more minions than the enemy to attack their hero
+    # Try to attack an enemy that will die with one hit so we get gold
+    entityToFinishOff = getBestPossibleLastHit(attackingHero, attackFromX, attackFromY)
+    if entityToFinishOff:
+        return entityToFinishOff
 
+    # Try to attack an enemy hero if we deem it worthwhile
+    heroToAttack = getHeroToAttack(attackingHero, attackFromX, attackFromY)
+    if heroToAttack:
+        return heroToAttack
+
+    ## Find the closest defending minion to the spot we will attack from!
+    defendingTeam = getOtherTeam(attackingHero.team)
+    defendingMinions = getMinions(defendingTeam)
+    return findClosestEntity(defendingMinions, attackFromX, attackFromY)
+
+
+# Runs logic to try to attach an enemy hero. Returns the hero to attack, or None if we shouldn't
+# attack any enemy heroes
+def getHeroToAttack(attackingHero, attackFromX, attackFromY):
+    MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO = 1  # We need to have this many more minions than the enemy to attack their hero
     attackingTeam = attackingHero.team
     defendingTeam = getOtherTeam(attackingTeam)
     defendingMinions = getMinions(defendingTeam)
 
-    ## If we aren't in range of their tower and our minion army overpowers their minion army, attack the hero!
+    ## If we aren't in range of their tower, our minion army overpowers their minion army, and they have a hero in range, attack the hero!
     if not getTower(defendingTeam).canAttack(attackFromX, attackFromY):
         defendingHero = getHero(defendingTeam)
         if defendingHero is not None and len(getMinions(attackingTeam)) - len(defendingMinions) > MIN_MINION_ARMY_DIFF_TO_ATTACK_HERO and defendingHero.isInRangeOf(attackingHero):
             return defendingHero
 
-    ## Find the closest defending minion to the spot we will attack from!
-    return findClosestEntity(defendingMinions, attackFromX, attackFromX)
+    # We don't want to attack a hero
+    return None
 
 ## Use to decide whether to add or subtract for the X direction
 def getDirectionMultiplier(team):
     return 1 if team == 0 else -1
+
 
 ## Returns true if entity 1 is closer to the given team's tower than entity 2 is
 ## NOTE this is the X direction ONLY for now
@@ -271,6 +317,7 @@ def getDistanceBetweenPoints(x1=None, y1=None, x2=None, y2=None):
         return yDist
 
 
+## This is a bit of a misnomer because we take health into account as well
 def findMinionFurthestAhead(team):
     """
     :param int team: The team for which to find a minion
@@ -283,13 +330,13 @@ def findMinionFurthestAhead(team):
 
     ## Look for a healthy minion first because we need a good body shield!
     ## NOTE that for now we look at the X direction ONLY when computing distance
-    bodyShieldMinion = findFarthestEntity(healthyMinions, tower.posX)
-    if bodyShieldMinion is None:
+    farthestMinion = findFarthestEntity(healthyMinions, tower.posX)
+    if farthestMinion is None:
         oppositeTower = getTower(getOtherTeam(team))
         ## We don't have any healthy minions! Retreat to minion farthest from OPPOSITE tower
-        bodyShieldMinion = findFarthestEntity(minions, oppositeTower.posX)
+        farthestMinion = findFarthestEntity(minions, oppositeTower.posX)
 
-    return bodyShieldMinion
+    return farthestMinion
 
 
 def isLowHealth(entity):
@@ -309,6 +356,23 @@ def getHero(team):
     # Possible that enemy hero is invisible, so none would be in the list
     # Todo: If our heroes are invisible are they also not in the list (they have to be...no way)
     return None
+
+
+def getHeroes(team):
+    heroes = []
+
+    for entity in allEntities:
+        if isinstance(entity, Hero) and entity.team == team:
+            heroes.append(entity)
+
+    return heroes
+
+
+def getHeroByType(team, heroType):
+    for entity in allEntities:
+        if isinstance(entity, Hero) and entity.team == team and entity.heroType == heroType:
+            return entity
+
 
 def getTower(team):
     for entity in allEntities:
@@ -385,8 +449,11 @@ def readInEntities(entityCount):
 
 
 def chooseHero():
-    print UNUSED_HEROS[0]
-    UNUSED_HEROS.pop(0)
+    chosenHero = UNUSED_HEROES[0]
+    CHOSEN_ALIVE_HEROES.append(chosenHero)
+    print chosenHero
+    UNUSED_HEROES.pop(0)
+
 
 def unused():
     bushAndSpawnPointCount = int(raw_input())  # useful from wood1, represents the number of bushes and the number of places where neutral units can spawn
@@ -421,10 +488,12 @@ def readInItems(itemCount):
         item = Item(itemName, itemCost, damage, health, maxHealth, mana, maxMana, moveSpeed, manaRegeneration, isPotion)
         allItems.append(item)
 
-def printMoveAttack(posX, posY, unitId, curTurn):
-    printMove('{} {} {} {}'.format(ACTION_MOVE_ATTACK, posX, posY, unitId), curTurn)
 
-def printMove(move, turn):
+def printMoveAttack(posX, posY, unitId, curTurn):
+    printAction('{} {} {} {}'.format(ACTION_MOVE_ATTACK, posX, posY, unitId), curTurn)
+
+
+def printAction(move, turn):
     global curInsult
 
     # update insult every 10 turns
