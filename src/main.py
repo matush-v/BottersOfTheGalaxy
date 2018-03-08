@@ -163,6 +163,7 @@ def attackAndOrMove(myHero, curTurn):
         enemyEntityToAttack = getEntityToAttack(myHero, desiredPosX, desiredPosY)
 
         if enemyEntityToAttack is not None:
+            removeEntityIfKilled(enemyEntityToAttack, myHero)
             printMoveAttack(desiredPosX, desiredPosY, enemyEntityToAttack.unitId, curTurn)
         else:
             # Hide behind our minions
@@ -188,7 +189,7 @@ def getAverageMinionDistance(team):
     return avgXPos
 
 # Will return None if no last hits are available
-def getBestPossibleLastHit(attackingHero, attackFromX, attackFromY):
+def getBestPossibleLastHit(team, attackingHero, attackFromX, attackFromY):
     myDmg = attackingHero.attackDamage
     dmgThreshold = myDmg * 0.30  # TODO: temp fix for giving Hero time to get to target. If we aren't moving closer to the target this shouldn't be needed
     enemyMinionsToKill = []
@@ -196,9 +197,9 @@ def getBestPossibleLastHit(attackingHero, attackFromX, attackFromY):
     movedHero.posX = attackFromX
     movedHero.posY = attackFromY
 
-    for enemyMinion in getMinions(getOtherTeam(myTeam)):
+    for enemyMinion in getMinions(team):
         if enemyMinion.isInRangeOf(movedHero) and enemyMinion.health <= myDmg + dmgThreshold and \
-                not getTower(getOtherTeam(myTeam)).canAttack(enemyMinion.posX, enemyMinion.posY):
+                not getTower(team).canAttack(enemyMinion.posX, enemyMinion.posY):
             enemyMinionsToKill.append(enemyMinion)
     return findClosestEntity(enemyMinionsToKill, movedHero.posX, movedHero.posY)
     #TODO: this was an old strategy for getting best last hit. It's worth trying it out again once the Hero 2 input is accounted for
@@ -218,7 +219,12 @@ def getFarthestXOutsideRange(entity, desiredX):
 # Takes in the hero that is attacking, as well as the (X,Y) coordinate he will attack from
 def getEntityToAttack(attackingHero, attackFromX, attackFromY):
     # Try to attack an enemy that will die with one hit so we get gold
-    entityToFinishOff = getBestPossibleLastHit(attackingHero, attackFromX, attackFromY)
+    entityToFinishOff = getBestPossibleLastHit(getOtherTeam(myTeam), attackingHero, attackFromX, attackFromY)
+    if entityToFinishOff:
+        return entityToFinishOff
+
+    # Try to last hit our own allies to prevent creep kills
+    entityToFinishOff = getBestPossibleLastHit(myTeam, attackingHero, attackFromX, attackFromY)
     if entityToFinishOff:
         return entityToFinishOff
 
@@ -249,6 +255,11 @@ def getHeroToAttack(attackingHero, attackFromX, attackFromY):
 
     # We don't want to attack a hero
     return None
+
+def removeEntityIfKilled(enemyEntityToAttack, myHero):
+    if enemyEntityToAttack.health <= myHero.attackDamage:
+        allEntities.remove([e for e in allEntities if e.unitId == enemyEntityToAttack.unitId][0])
+
 
 ## Use to decide whether to add or subtract for the X direction
 def getDirectionMultiplier(team):
